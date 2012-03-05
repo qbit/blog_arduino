@@ -37,14 +37,14 @@
 TARGET = ${.CURDIR:C/.*\///g}
 
 ## you might use this for an older arduino
-UPLOAD_RATE = 19200
-PORT = /dev/cuaU0
-AVRDUDE_PROGRAMMER = stk500
+#UPLOAD_RATE = 19200
+#PORT = /dev/cuaU0
+#AVRDUDE_PROGRAMMER = stk500
 
 ## or for newer boards like the UNO
-#UPLOAD_RATE = 57600
-#PORT = /dev/cuaU0
-#AVRDUDE_PROGRAMMER = arduino
+UPLOAD_RATE = 19200
+PORT = /dev/cuaU0
+AVRDUDE_PROGRAMMER = arduino
 
 ## or this, if you have a usbtiny ISP
 #PORT = usb
@@ -55,7 +55,7 @@ F_CPU = 16000000
 
 #If your sketch uses any libraries, list them here, eg.
 #LIBRARIES=EEPROM LiquidCrystal Wire
-LIBRARIES=
+LIBRARIES=Ethernet SD SPI
 
 ############################################################################
 # Below here nothing should be changed...
@@ -110,8 +110,10 @@ LDFLAGS = -lm
 AVRDUDE_PORT = $(PORT)
 AVRDUDE_WRITE_FLASH = -U flash:w:applet/$(TARGET).hex
 AVRDUDE_CONF = /etc/avrdude.conf
+#AVRDUDE_FLAGS = -V -F -C $(AVRDUDE_CONF) -p $(MCU) -P $(AVRDUDE_PORT) \
+#-c $(AVRDUDE_PROGRAMMER) -b $(UPLOAD_RATE)
 AVRDUDE_FLAGS = -V -F -C $(AVRDUDE_CONF) -p $(MCU) -P $(AVRDUDE_PORT) \
--c $(AVRDUDE_PROGRAMMER) -b $(UPLOAD_RATE)
+-c $(AVRDUDE_PROGRAMMER)
 
 # Program settings
 CC = $(AVR_TOOLS_PATH)/avr-gcc
@@ -166,6 +168,9 @@ sym: applet/$(TARGET).sym
 upload: applet/$(TARGET).hex
 	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH)
 
+# Drop to console.
+console:
+	kermit -b 9600 -l $(PORT) -c
 
 # Display size of file.
 HEXSIZE = $(SIZE) --target=$(FORMAT) applet/$(TARGET).hex
@@ -249,7 +254,7 @@ applet/core.a: $(OBJ)
 clean:
 	$(REMOVE) applet/$(TARGET).hex applet/$(TARGET).eep applet/$(TARGET).cof applet/$(TARGET).elf \
 	applet/$(TARGET).map applet/$(TARGET).sym applet/$(TARGET).lss applet/core.a \
-	$(OBJ) $(LST) $(SRC:.c=.s) $(SRC:.c=.d) $(CXXSRC:.cpp=.s) $(CXXSRC:.cpp=.d)
+	$(OBJ) $(LST) $(SRC:.c=.s) $(SRC:.c=.d) $(CXXSRC:.cpp=.s) $(CXXSRC:.cpp=.d) 
 
 .PHONY:	all build elf hex eep lss sym program coff extcoff clean applet_files sizebefore sizeafter
 
