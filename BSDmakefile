@@ -32,6 +32,9 @@
 #  6. Type "make upload", reset your Arduino board, and press enter to
 #     upload your program to the Arduino board.
 #
+#  7. type "make console" to drop to a kermit console.  You must have
+#     kermit installed
+#
 # $Id: BSDmakefile,v 1.2 2011/12/09 11:55:46 jasper Exp $
 
 TARGET = ${.CURDIR:C/.*\///g}
