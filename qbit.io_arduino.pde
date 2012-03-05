@@ -1,24 +1,11 @@
-/*
- * $OpenBSD: template.pde,v 1.1.1.1 2011/09/17 16:41:30 jasper Exp $
- *
- * Arduino projects run something like this:
- *	main() {
- *		init(); // arduino private setup
- *		setup(); // your setup goes here
- *		while(1) {
- *			loop(); // your main loop
- *		}
- *	}
- *
- * Arduino reference is at /usr/local/share/doc/arduino/reference/
- */
+#include <Ethernet.h>
 
 void setup() {
-	/* your code here */
+	Serial.begin( 9600 );
 	return;
 }
 
 void loop() {
-	/* more of your code here */
-	return ;
+	delay( 3000 );
+	Serial.println( "Hola\n" );
 }
