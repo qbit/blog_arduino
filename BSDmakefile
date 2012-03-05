@@ -47,6 +47,7 @@ TARGET = ${.CURDIR:C/.*\///g}
 ## or for newer boards like the UNO
 UPLOAD_RATE = 19200
 PORT = /dev/cuaU0
+BAUD = 9600
 AVRDUDE_PROGRAMMER = arduino
 
 ## or this, if you have a usbtiny ISP
@@ -173,7 +174,7 @@ upload: applet/$(TARGET).hex
 
 # Drop to console.
 console:
-	kermit -b 9600 -l $(PORT) -c
+	kermit -b $(BAUD) -l $(PORT) -c
 
 # Display size of file.
 HEXSIZE = $(SIZE) --target=$(FORMAT) applet/$(TARGET).hex
