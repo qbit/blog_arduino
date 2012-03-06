@@ -59,12 +59,12 @@ F_CPU = 16000000
 
 #If your sketch uses any libraries, list them here, eg.
 #LIBRARIES=EEPROM LiquidCrystal Wire
-LIBRARIES=Ethernet SD SPI
+LIBRARIES=Ethernet SPI
 
 ############################################################################
 # Below here nothing should be changed...
 
-ARDUINO = /usr/local/share/arduino/
+ARDUINO = /usr/local/share/arduino
 .PATH: $(ARDUINO)/cores/arduino ${LIBRARIES:S|^|$(ARDUINO)/libraries/|g}
 AVR_TOOLS_PATH = /usr/local/bin
 SRC = pins_arduino.c wiring.c wiring_analog.c wiring_digital.c \
