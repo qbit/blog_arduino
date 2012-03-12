@@ -11,8 +11,8 @@
 # Detailed instructions for using the makefile:
 #
 #  1. Copy this file into the folder with your sketch. There should be a
-#     file with the same name as the folder and with the extension .pde
-#     (e.g. foo.pde in the foo/ folder).
+#     file with the same name as the folder and with the extension .ino
+#     (e.g. foo.ino in the foo/ folder).
 #
 #  2. Modify the line containing "PORT" to refer to the filename
 #     representing the USB or serial connection to your Arduino board
@@ -32,9 +32,6 @@
 #  6. Type "make upload", reset your Arduino board, and press enter to
 #     upload your program to the Arduino board.
 #
-#  7. type "make console" to drop to a kermit console.  You must have
-#     kermit installed
-#
 # $Id: BSDmakefile,v 1.2 2011/12/09 11:55:46 jasper Exp $
 
 TARGET = ${.CURDIR:C/.*\///g}
@@ -45,7 +42,7 @@ TARGET = ${.CURDIR:C/.*\///g}
 #AVRDUDE_PROGRAMMER = stk500
 
 ## or for newer boards like the UNO
-UPLOAD_RATE = 19200
+UPLOAD_RATE = 57600
 PORT = /dev/cuaU0
 BAUD = 9600
 AVRDUDE_PROGRAMMER = arduino
@@ -59,18 +56,21 @@ F_CPU = 16000000
 
 #If your sketch uses any libraries, list them here, eg.
 #LIBRARIES=EEPROM LiquidCrystal Wire
-LIBRARIES=Ethernet SPI
+LIBRARIES=Ethernet Ethernet/utility SPI
+
+# Arduino variant, one of: "eightanaloginputs", "leonardo", "mega",
+# "micro" or "standard".
+VARIANT = standard
 
 ############################################################################
 # Below here nothing should be changed...
 
-ARDUINO = /usr/local/share/arduino
-.PATH: $(ARDUINO)/cores/arduino ${LIBRARIES:S|^|$(ARDUINO)/libraries/|g}
+ARDUINO = /usr/local/share/arduino/
+.PATH: $(ARDUINO)/cores/arduino ${LIBRARIES:S|^|$(ARDUINO)/libraries/|g} $(ARDUINO)/libraries/Ethernet/utility
 AVR_TOOLS_PATH = /usr/local/bin
-SRC = pins_arduino.c wiring.c wiring_analog.c wiring_digital.c \
+SRC = wiring.c wiring_analog.c wiring_digital.c \
 wiring_pulse.c wiring_shift.c WInterrupts.c
-CXXSRC = HardwareSerial.cpp WMath.cpp Print.cpp WString.cpp \
-	${LIBRARIES:S|$|.cpp|g}
+CXXSRC = HardwareSerial.cpp WMath.cpp Print.cpp WString.cpp socket.cpp w5100.cpp
 FORMAT = ihex
 
 
@@ -89,9 +89,9 @@ CDEFS = -DF_CPU=$(F_CPU)
 CXXDEFS = -DF_CPU=$(F_CPU)
 
 # Place -I options here
-LIBINC=${LIBRARIES:S|^|-I$(ARDUINO)/libraries/|g}
-CINCS = -I$(ARDUINO)/cores/arduino $(LIBINC)
-CXXINCS = -I$(ARDUINO)/cores/arduino $(LIBINC)
+LIBINC=${LIBRARIES:S|^|-I$(ARDUINO)/libraries/|g} -I$(ARDUINO)/variants/$(VARIANT)
+CINCS = -I$(ARDUINO)/cores/arduino $(LIBINC) -I$(ARDUINO)/variants/$(VARIANT)
+CXXINCS = -I$(ARDUINO)/cores/arduino $(LIBINC) -I$(ARDUINO)/variants/$(VARIANT) 
 
 # Compiler flag to set the C Standard level.
 # c89   - "ANSI" C
@@ -114,8 +114,6 @@ LDFLAGS = -lm
 AVRDUDE_PORT = $(PORT)
 AVRDUDE_WRITE_FLASH = -U flash:w:applet/$(TARGET).hex
 AVRDUDE_CONF = /etc/avrdude.conf
-#AVRDUDE_FLAGS = -V -F -C $(AVRDUDE_CONF) -p $(MCU) -P $(AVRDUDE_PORT) \
-#-c $(AVRDUDE_PROGRAMMER) -b $(UPLOAD_RATE)
 AVRDUDE_FLAGS = -V -F -C $(AVRDUDE_CONF) -p $(MCU) -P $(AVRDUDE_PORT) \
 -c $(AVRDUDE_PROGRAMMER)
 
@@ -150,16 +148,14 @@ all: applet_files build sizeafter
 build: elf hex
 
 # Here is the "preprocessing".
-# It creates a .cpp file based with the same name as the .pde file.
-# On top of the new .cpp file comes the WProgram.h header.
+# It creates a .cpp file based with the same name as the .ino file.
 # At the end there is a generic main() function attached.
 # Then the .cpp file will be compiled. Errors during compile will
 # refer to this new, automatically generated, file.
-# Not the original .pde file you actually edit...
-applet_files: $(TARGET).pde
+# Not the original .ino file you actually edit...
+applet_files: $(TARGET).ino
 	test -d applet || mkdir applet
-	echo '#include "WProgram.h"' > applet/$(TARGET).cpp
-	cat $(TARGET).pde >> applet/$(TARGET).cpp
+	cat $(TARGET).ino > applet/$(TARGET).cpp
 	cat $(ARDUINO)/cores/arduino/main.cpp >> applet/$(TARGET).cpp
 
 elf: applet/$(TARGET).elf
@@ -220,7 +216,7 @@ extcoff: $(TARGET).elf
 	$(NM) -n $< > $@
 
 # Link: create ELF output file from library.
-applet/$(TARGET).elf: $(TARGET).pde applet/core.a
+applet/$(TARGET).elf: $(TARGET).ino applet/core.a
 	$(CXX) $(ALL_CXXFLAGS) -o $@ applet/$(TARGET).cpp -L. applet/core.a $(LDFLAGS)
 
 applet/core.a: $(OBJ)
@@ -258,7 +254,7 @@ applet/core.a: $(OBJ)
 clean:
 	$(REMOVE) applet/$(TARGET).hex applet/$(TARGET).eep applet/$(TARGET).cof applet/$(TARGET).elf \
 	applet/$(TARGET).map applet/$(TARGET).sym applet/$(TARGET).lss applet/core.a \
-	$(OBJ) $(LST) $(SRC:.c=.s) $(SRC:.c=.d) $(CXXSRC:.cpp=.s) $(CXXSRC:.cpp=.d) 
+	$(OBJ) $(LST) $(SRC:.c=.s) $(SRC:.c=.d) $(CXXSRC:.cpp=.s) $(CXXSRC:.cpp=.d)
 
 .PHONY:	all build elf hex eep lss sym program coff extcoff clean applet_files sizebefore sizeafter
 
