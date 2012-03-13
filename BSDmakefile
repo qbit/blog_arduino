@@ -56,7 +56,7 @@ F_CPU = 16000000
 
 #If your sketch uses any libraries, list them here, eg.
 #LIBRARIES=EEPROM LiquidCrystal Wire
-LIBRARIES=Ethernet Ethernet/utility SPI
+LIBRARIES=new IPAddress Ethernet EthernetUdp Dhcp Dns w5100 socket EthernetClient SPI aJSON stringbuffer streamhelper
 
 # Arduino variant, one of: "eightanaloginputs", "leonardo", "mega",
 # "micro" or "standard".
@@ -66,11 +66,12 @@ VARIANT = standard
 # Below here nothing should be changed...
 
 ARDUINO = /usr/local/share/arduino/
-.PATH: $(ARDUINO)/cores/arduino ${LIBRARIES:S|^|$(ARDUINO)/libraries/|g} $(ARDUINO)/libraries/Ethernet/utility
+.PATH: $(ARDUINO)/cores/arduino ${LIBRARIES:S|^|$(ARDUINO)/libraries/|g}
 AVR_TOOLS_PATH = /usr/local/bin
 SRC = wiring.c wiring_analog.c wiring_digital.c \
 wiring_pulse.c wiring_shift.c WInterrupts.c
-CXXSRC = HardwareSerial.cpp WMath.cpp Print.cpp WString.cpp socket.cpp w5100.cpp
+CXXSRC = HardwareSerial.cpp WMath.cpp Print.cpp WString.cpp \
+	${LIBRARIES:S|$|.cpp|g}
 FORMAT = ihex
 
 
@@ -90,8 +91,8 @@ CXXDEFS = -DF_CPU=$(F_CPU)
 
 # Place -I options here
 LIBINC=${LIBRARIES:S|^|-I$(ARDUINO)/libraries/|g} -I$(ARDUINO)/variants/$(VARIANT)
-CINCS = -I$(ARDUINO)/cores/arduino $(LIBINC) -I$(ARDUINO)/variants/$(VARIANT)
-CXXINCS = -I$(ARDUINO)/cores/arduino $(LIBINC) -I$(ARDUINO)/variants/$(VARIANT) 
+CINCS = -I$(ARDUINO)/cores/arduino $(LIBINC) -I$(ARDUINO)/variants/$(VARIANT) -I$(ARDUINO)/libraries/aJSON/utility
+CXXINCS = -I$(ARDUINO)/cores/arduino $(LIBINC) -I$(ARDUINO)/variants/$(VARIANT) -I$(ARDUINO)/libraries/Ethernet/utility
 
 # Compiler flag to set the C Standard level.
 # c89   - "ANSI" C
@@ -169,7 +170,7 @@ upload: applet/$(TARGET).hex
 	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH)
 
 # Drop to console.
-console:
+console: upload
 	kermit -b $(BAUD) -l $(PORT) -c
 
 # Display size of file.
